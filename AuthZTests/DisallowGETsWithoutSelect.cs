@@ -1,6 +1,6 @@
 namespace AuthZTests;
 
-public class AllGETsAreWithSelect
+public class DisallowGETsWithoutSelect
 {
     [SetUp]
     public void Setup()

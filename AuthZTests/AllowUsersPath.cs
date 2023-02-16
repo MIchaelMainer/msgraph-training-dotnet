@@ -1,6 +1,6 @@
 namespace AuthZTests;
 
-public class PolicyTests
+public class AllowUsersPath
 {
     [SetUp]
     public void Setup()
@@ -8,7 +8,7 @@ public class PolicyTests
     }
 
     [Test]
-    public void Test1()
+    public async Task ()
     {
         Assert.Pass();
     }
