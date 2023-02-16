@@ -67,7 +67,7 @@ namespace GraphTutorial.AuthZ
                 PolicyContext = new PolicyContext()
                 {
                     Decisions = new List<string>() { "allow" },
-                    Id = "3b0dfa15-ae40-11ed-b77c-01777bcce0c6",
+                    Id = "3fc33fbf-ae53-11ed-904d-01777bcce0c6",
                     Path = policyName
                 },
                 ResourceContext = new Dictionary<string, object>()
