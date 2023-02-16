@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿using GraphTutorial.Http.Models;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace GraphTutorial.AuthZ.Models
 {
@@ -15,7 +17,7 @@ namespace GraphTutorial.AuthZ.Models
         public PolicyContext PolicyContext { get; set; }
 
         [JsonPropertyName("resource_context")]
-        public IDictionary<string, string> ResourceContext { get; set; }
+        public IDictionary<string, object>? ResourceContext { get; set; }
     }
 
     /// <summary>
@@ -47,6 +49,17 @@ namespace GraphTutorial.AuthZ.Models
         [JsonPropertyName("path")]
         public string Path { get; set; }
     }
+
+    /// <summary>
+    /// Identifies the ResourceContext
+    /// https://docs.aserto.com/docs/authorizer-guide/resource-context
+    /// </summary>
+    /// 
+    //internal class ResourceContext
+    //{
+    //    [JsonPropertyName("httprequest")]
+    //    public HttpRequestMessageModel? HttpRequest { get; set; }
+    //}
 
     /// <summary>
     /// Models the results returned from the Authorizer.

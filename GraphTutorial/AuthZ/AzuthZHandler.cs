@@ -3,6 +3,7 @@
 
 using GraphTutorial.AuthZ.Models;
 using GraphTutorial.AuthZ.Utils;
+using GraphTutorial.Http.Models;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -35,18 +36,20 @@ namespace GraphTutorial.AuthZ
             var JwtPayload = JwtDecoder.DecodeJWT(request.Headers.Authorization.Parameter);
             var msJwtClaims = new MsJwtClaims(JwtPayload?.Claims);
 
+            var httpRequestMessageResource = new GraphTutorial.Http.Models.HttpRequestMessageModel(request);
+
             // TODO: uncomment below lines to use runtime values.
             // var userId = msJwtClaims.oid;
             // var policyName = $"simplepolicy.{request.Method}.{request.RequestUri.Segments[^1]}";
             var userId = "011a88bc-7df9-4d92-ba1f-2ff319e101e1";
             var policyName = "simplepolicy.GET.me";
 
-            return !(await IsAuthorizedAsync(userId, policyName))
+            return !(await IsAuthorizedAsync(userId, policyName, httpRequestMessageResource))
                 ? throw new Exception("Access denied!")
                 : await base.SendAsync(request, cancellationToken);
         }
 
-        static async Task<bool> IsAuthorizedAsync(string userId, string policyName)
+        static async Task<bool> IsAuthorizedAsync(string userId, string policyName, HttpRequestMessageModel httpRequestMessageModel)
         {
             if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(policyName))
                 return false;
@@ -67,7 +70,12 @@ namespace GraphTutorial.AuthZ
                     Decisions = new List<string>() { "allowed" },
                     Id = "18cdef8a-acc3-11ed-9581-01777bcce0c6",
                     Path = policyName
+                },
+                ResourceContext = new Dictionary<string, object>()
+                {
+                    { "httpRequest", httpRequestMessageModel }
                 }
+                
             };
 
             var payload = JsonSerializer.Serialize(contextPayload);
