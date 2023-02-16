@@ -40,12 +40,15 @@ namespace GraphTutorial.AuthZ
             //var JwtPayload = JwtDecoder.DecodeJWT(request.Headers.Authorization.Parameter);
             //var msJwtClaims = new MsJwtClaims(JwtPayload?.Claims);
 
-            return !(await IsAuthorizedAsync(AuthZOption.Policy.ToString()))
+            // Convert HttpRequestMessage into a model used for evaluation.
+            var httpRequestMessageResource = new GraphTutorial.Http.Models.HttpRequestMessageModel(request);
+
+            return !(await IsAuthorizedAsync(AuthZOption.Policy.ToString(), httpRequestMessageResource))
                 ? throw new Exception("Access denied!")
                 : await base.SendAsync(request, cancellationToken);
         }
 
-        static async Task<bool> IsAuthorizedAsync(string policyName)
+        static async Task<bool> IsAuthorizedAsync(string policyName, HttpRequestMessageModel httpRequestMessageModel)
         {
             if (string.IsNullOrWhiteSpace(policyName))
                 return false;
