@@ -2,14 +2,20 @@
 
 namespace GraphTutorial.AuthZ.Models
 {
+    /// <summary>
+    /// Models the payload sent to the Authorizer Is API.
+    /// https://docs.aserto.com/docs/authorizer-guide/is
+    /// </summary>
     internal class ContextPayload
     {
-
         [JsonPropertyName("identity_context")]
         public IdentityContext IdentityContext { get; set; }
 
         [JsonPropertyName("policy_context")]
         public PolicyContext PolicyContext { get; set; }
+
+        [JsonPropertyName("resource_context")]
+        public IDictionary<string, string> ResourceContext { get; set; }
     }
 
     /// <summary>

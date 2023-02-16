@@ -35,15 +35,20 @@ namespace GraphTutorial.AuthZ
             var JwtPayload = JwtDecoder.DecodeJWT(request.Headers.Authorization.Parameter);
             var msJwtClaims = new MsJwtClaims(JwtPayload?.Claims);
 
-            return !(await IsAuthorizedAsync(msJwtClaims.oid))
+            // TODO: uncomment below lines to use runtime values.
+            // var userId = msJwtClaims.oid;
+            // var policyName = $"simplepolicy.{request.Method}.{request.RequestUri.Segments[^1]}";
+            var userId = "011a88bc-7df9-4d92-ba1f-2ff319e101e1";
+            var policyName = "simplepolicy.GET.me";
+
+            return !(await IsAuthorizedAsync(userId, policyName))
                 ? throw new Exception("Access denied!")
                 : await base.SendAsync(request, cancellationToken);
         }
 
-        static async Task<bool> IsAuthorizedAsync(string userId)
+        static async Task<bool> IsAuthorizedAsync(string userId, string policyName)
         {
-            // TODO: Validate call.
-            if (string.IsNullOrWhiteSpace(userId))
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(policyName))
                 return false;
             var request = new HttpRequestMessage(HttpMethod.Post, "https://authorizer.prod.aserto.com/api/v1/authz/is");
             request.Headers.Add("Accept", "application/json");
@@ -61,7 +66,7 @@ namespace GraphTutorial.AuthZ
                 {
                     Decisions = new List<string>() { "allowed" },
                     Id = "18cdef8a-acc3-11ed-9581-01777bcce0c6",
-                    Path = "simplepolicy.GET.me"
+                    Path = policyName
                 }
             };
 
