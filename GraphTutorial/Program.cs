@@ -44,7 +44,7 @@ while (choice != 0)
             break;
         case 1:
             // Allow all requests
-            await CallAllRequests(AuthZPolicy.AllowAllRequests);
+            await CallAllRequests(AuthZPolicy.Base);
             break;
         case 2:
             // Allow users path only
@@ -52,7 +52,7 @@ while (choice != 0)
             break;
         case 3:
             // Disallow all but one write paths
-            await CallAllRequests(AuthZPolicy.DisallowAllButOneWritePaths);
+            await CallAllRequests(AuthZPolicy.DisallowAllButOneWritePath);
             break;
         case 4:
             // Disallow all but two write paths

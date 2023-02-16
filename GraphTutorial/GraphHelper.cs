@@ -23,15 +23,7 @@ class GraphHelper
         Func<DeviceCodeInfo, CancellationToken, Task> deviceCodePrompt)
     {
         _settings = settings;
-        var options = new DeviceCodeCredentialOptions
-        {
-            TokenCachePersistenceOptions = new TokenCachePersistenceOptions
-            {
-                Name = "test.msal.cache"
-            }
-        };
-        _deviceCodeCredential = new DeviceCodeCredential(deviceCodePrompt,
-            settings.AuthTenant, settings.ClientId, options);
+        _deviceCodeCredential = new DeviceCodeCredential(deviceCodePrompt, settings.AuthTenant, settings.ClientId);
 
         var authProvider = new TokenCredentialAuthProvider(_deviceCodeCredential, settings.GraphUserScopes);
 
