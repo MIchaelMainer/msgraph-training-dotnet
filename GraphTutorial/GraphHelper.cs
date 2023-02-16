@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Identity;
+using GraphTutorial.AuthZ;
 using Microsoft.Graph;
 
 class GraphHelper
@@ -24,7 +25,13 @@ class GraphHelper
         _deviceCodeCredential = new DeviceCodeCredential(deviceCodePrompt,
             settings.AuthTenant, settings.ClientId);
 
-        _userClient = new GraphServiceClient(_deviceCodeCredential, settings.GraphUserScopes);
+        var authProvider = new TokenCredentialAuthProvider(_deviceCodeCredential, settings.GraphUserScopes);
+
+        var handlers = GraphClientFactory.CreateDefaultHandlers(authProvider);
+        handlers.Insert(1, new AzuthZHandler());
+
+        var httpClient = GraphClientFactory.Create(handlers);
+        _userClient = new GraphServiceClient(httpClient);
     }
     // </UserAuthConfigSnippet>
 
@@ -154,7 +161,7 @@ class GraphHelper
             _appClient = new GraphServiceClient(_clientSecretCredential,
                 // Use the default scope, which will request the scopes
                 // configured on the app registration
-                new[] {"https://graph.microsoft.com/.default"});
+                new[] { "https://graph.microsoft.com/.default" });
         }
     }
     // </AppOnyAuthConfigSnippet>
@@ -185,7 +192,7 @@ class GraphHelper
     // </GetUsersSnippet>
     #endregion
 
-    #pragma warning disable CS1998
+#pragma warning disable CS1998
     // <MakeGraphCallSnippet>
     // This function serves as a playground for testing Graph snippets
     // or other code
