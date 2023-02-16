@@ -8,7 +8,7 @@ public class AllowUsersPath
     }
 
     [Test]
-    public async Task ()
+    public async Task Test()
     {
         Assert.Pass();
     }
