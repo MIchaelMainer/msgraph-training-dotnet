@@ -2,6 +2,8 @@
 // Licensed under the MIT license.
 
 // <ProgramSnippet>
+using GraphTutorial.AuthZ.Models;
+
 Console.WriteLine(".NET Graph Tutorial\n");
 
 var settings = Settings.LoadSettings();
@@ -10,7 +12,7 @@ var settings = Settings.LoadSettings();
 InitializeGraph(settings);
 
 // Greet the user by name
-await GreetUserAsync();
+await GreetUserAsync(AuthZPolicy.Base);
 
 int choice = -1;
 
@@ -18,11 +20,11 @@ while (choice != 0)
 {
     Console.WriteLine("Please choose one of the following options:");
     Console.WriteLine("0. Exit");
-    Console.WriteLine("1. Display access token");
-    Console.WriteLine("2. List my inbox");
-    Console.WriteLine("3. Send mail");
-    Console.WriteLine("4. List users (requires app-only)");
-    Console.WriteLine("5. Make a Graph call");
+    Console.WriteLine("1. Allow all requests");
+    Console.WriteLine("2. Allow users path only");
+    Console.WriteLine("3. Disallow all but one write path");
+    Console.WriteLine("4. Disallow all but two write path");
+    Console.WriteLine("5. Disallow GETs without select");
 
     try
     {
@@ -34,37 +36,38 @@ while (choice != 0)
         choice = -1;
     }
 
-    switch(choice)
+    switch (choice)
     {
         case 0:
             // Exit the program
             Console.WriteLine("Goodbye...");
             break;
         case 1:
-            // Display access token
-            await DisplayAccessTokenAsync();
+            // Allow all requests
+            await CallAllRequests(AuthZPolicy.AllowAllRequests);
             break;
         case 2:
-            // List emails from user's inbox
-            await ListInboxAsync();
+            // Allow users path only
+            await CallAllRequests(AuthZPolicy.AllowUsersPath);
             break;
         case 3:
-            // Send an email message
-            await SendMailAsync();
+            // Disallow all but one write paths
+            await CallAllRequests(AuthZPolicy.DisallowAllButOneWritePaths);
             break;
         case 4:
-            // List users
-            await ListUsersAsync();
+            // Disallow all but two write paths
+            await CallAllRequests(AuthZPolicy.DisallowAllButTwoWritePaths);
             break;
         case 5:
-            // Run any Graph code
-            await MakeGraphCallAsync();
+            // Disallow all GETs without select
+            await CallAllRequests(AuthZPolicy.DisallowGETsWithoutSelect);
             break;
         default:
             Console.WriteLine("Invalid choice! Please try again.");
             break;
     }
 }
+
 // </ProgramSnippet>
 
 // <InitializeGraphSnippet>
@@ -84,11 +87,21 @@ void InitializeGraph(Settings settings)
 // </InitializeGraphSnippet>
 
 // <GreetUserSnippet>
-async Task GreetUserAsync()
+async Task CallAllRequests(AuthZPolicy policy)
+{
+    // List emails from user's inbox
+    await ListInboxAsync(policy);
+    // Send an email message
+    await SendMailAsync(policy);
+    // List users
+    await ListUsersAsync(policy);
+}
+
+async Task GreetUserAsync(AuthZPolicy policy)
 {
     try
     {
-        var user = await GraphHelper.GetUserAsync();
+        var user = await GraphHelper.GetUserAsync(policy);
         Console.WriteLine($"Hello, {user?.DisplayName}!");
         // For Work/school accounts, email is in Mail property
         // Personal accounts, email is in UserPrincipalName
@@ -96,32 +109,18 @@ async Task GreetUserAsync()
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error getting user: {ex.Message}");
+        Console.WriteLine($"Error getting user: {ex.InnerException?.Message ?? ex.Message}");
     }
 }
 // </GreetUserSnippet>
 
-// <DisplayAccessTokenSnippet>
-async Task DisplayAccessTokenAsync()
-{
-    try
-    {
-        var userToken = await GraphHelper.GetUserTokenAsync();
-        Console.WriteLine($"User token: {userToken}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error getting user access token: {ex.Message}");
-    }
-}
-// </DisplayAccessTokenSnippet>
 
 // <ListInboxSnippet>
-async Task ListInboxAsync()
+async Task ListInboxAsync(AuthZPolicy policy)
 {
     try
     {
-        var messagePage = await GraphHelper.GetInboxAsync();
+        var messagePage = await GraphHelper.GetInboxAsync(policy);
 
         // Output each message's details
         foreach (var message in messagePage.CurrentPage)
@@ -142,19 +141,19 @@ async Task ListInboxAsync()
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error getting user's inbox: {ex.Message}");
+        Console.WriteLine($"Error getting user's inbox: {ex.InnerException?.Message ?? ex.Message}");
     }
 }
 // </ListInboxSnippet>
 
 // <SendMailSnippet>
-async Task SendMailAsync()
+async Task SendMailAsync(AuthZPolicy policy)
 {
     try
     {
         // Send mail to the signed-in user
         // Get the user for their email address
-        var user = await GraphHelper.GetUserAsync();
+        var user = await GraphHelper.GetUserAsync(policy);
 
         var userEmail = user?.Mail ?? user?.UserPrincipalName;
 
@@ -165,23 +164,23 @@ async Task SendMailAsync()
         }
 
         await GraphHelper.SendMailAsync("Testing Microsoft Graph",
-            "Hello world!", userEmail);
+            "Hello world!", userEmail, policy);
 
         Console.WriteLine("Mail sent.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error sending mail: {ex.Message}");
+        Console.WriteLine($"Error sending mail: {ex.InnerException?.Message ?? ex.Message}");
     }
 }
 // </SendMailSnippet>
 
 // <ListUsersSnippet>
-async Task ListUsersAsync()
+async Task ListUsersAsync(AuthZPolicy policy)
 {
     try
     {
-        var userPage = await GraphHelper.GetUsersAsync();
+        var userPage = await GraphHelper.GetUsersAsync(policy);
 
         // Output each users's details
         foreach (var user in userPage.CurrentPage)
@@ -201,14 +200,7 @@ async Task ListUsersAsync()
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error getting users: {ex.Message}");
+        Console.WriteLine($"Error getting users: {ex.InnerException?.Message ?? ex.Message}");
     }
 }
 // </ListUsersSnippet>
-
-// <MakeGraphCallSnippet>
-async Task MakeGraphCallAsync()
-{
-    await GraphHelper.MakeGraphCallAsync();
-}
-// </MakeGraphCallSnippet>
