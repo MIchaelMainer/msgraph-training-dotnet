@@ -26,8 +26,9 @@ namespace GraphTutorial.AuthZ.Models
     /// </summary>
     internal class IdentityContext
     {
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         [JsonPropertyName("type")]
-        public string Type { get; set; }
+        public IdentityType Type { get; set; }
 
         [JsonPropertyName("identity")]
         public string Identity { get; set; }
@@ -80,5 +81,12 @@ namespace GraphTutorial.AuthZ.Models
 
         [JsonPropertyName("is")]
         public bool Is { get; set; }
+    }
+
+    internal enum IdentityType
+    {
+        IDENTITY_TYPE_NONE,
+        IDENTITY_TYPE_SUB,
+        IDENTITY_TYPE_JWT
     }
 }
