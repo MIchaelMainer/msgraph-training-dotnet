@@ -28,7 +28,7 @@ class GraphHelper
         var authProvider = new TokenCredentialAuthProvider(_deviceCodeCredential, settings.GraphUserScopes);
 
         var handlers = GraphClientFactory.CreateDefaultHandlers(authProvider);
-        handlers.Insert(1, new AzuthZHandler());
+        handlers.Insert(1, new AuthZHandler());
 
         var httpClient = GraphClientFactory.Create(handlers);
         _userClient = new GraphServiceClient(httpClient);
