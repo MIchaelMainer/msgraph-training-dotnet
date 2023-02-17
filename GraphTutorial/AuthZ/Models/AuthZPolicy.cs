@@ -6,7 +6,6 @@ namespace GraphTutorial.AuthZ.Models
     public enum AuthZPolicy
     {
         Base,
-        AllGetWithSelect,
         AllowUsersPath,
         DisallowAllButOneWritePath,
         DisallowAllButTwoWritePaths,
