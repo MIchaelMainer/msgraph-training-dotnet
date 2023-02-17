@@ -1,42 +1,42 @@
 namespace AuthZTests;
 
-public class AllowUsersPath
+public class Base
 {
-    public readonly string PolicyName = AuthZPolicy.AllowUsersPath.ToString();
+    public readonly string PolicyName = AuthZPolicy.Base.ToString();
 
     [Test]
-    public async Task AllowUsersPath_AllowsGETV1Users()
+    public async Task Base_AllowsGETV1Users()
     {
         Assert.IsTrue(await TestHelpers.IsAllowedAsync(PolicyName, "/v1.0/users", HttpMethod.Get));
     }
 
     [Test]
-    public async Task AllowUsersPath_AllowsGETBetaUsers()
+    public async Task Base_AllowsGETBetaUsers()
     {
         Assert.IsTrue(await TestHelpers.IsAllowedAsync(PolicyName, "/beta/users", HttpMethod.Get));
     }
 
     [Test]
-    public async Task AllowUsersPath_AllowsPOSTV1Users()
+    public async Task Base_AllowsPOSTV1Users()
     {
         Assert.IsTrue(await TestHelpers.IsAllowedAsync(PolicyName, "/v1.0/users", HttpMethod.Post));
     }
 
     [Test]
-    public async Task AllowUsersPath_AllowsPOSTBetaUsers()
+    public async Task Base_AllowsPOSTBetaUsers()
     {
         Assert.IsTrue(await TestHelpers.IsAllowedAsync(PolicyName, "/beta/users", HttpMethod.Post));
     }
 
     [Test]
-    public async Task AllowUsersPath_AllowsDeletionOfUsers()
+    public async Task Base_AllowsDeletionOfUsers()
     {
         Assert.IsTrue(await TestHelpers.IsAllowedAsync(PolicyName, "/v1.0/users/c7fc7171-6fd3-4e86-b059-c964ded904b9", HttpMethod.Delete));
     }
 
     [Test]
-    public async Task AllowUsersPath_DisallowsGetAdminConsentPolicy()
+    public async Task Base_AllowsGetAdminConsentPolicy()
     {
-        Assert.IsFalse(await TestHelpers.IsAllowedAsync(PolicyName, "/v1.0/policies/adminConsentRequestPolicy", HttpMethod.Get));
+        Assert.IsTrue(await TestHelpers.IsAllowedAsync(PolicyName, "/v1.0/policies/adminConsentRequestPolicy", HttpMethod.Get));
     }
 }
