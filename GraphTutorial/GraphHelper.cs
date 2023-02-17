@@ -78,7 +78,6 @@ class GraphHelper
         else
         {
             return userRequest
-                .WithAuthZPolicy(policy)
                 .GetAsync();
         }
     }
