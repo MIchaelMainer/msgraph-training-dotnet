@@ -11,7 +11,7 @@ using System.Text.Json;
 
 namespace GraphTutorial.AuthZ
 {
-    public class AzuthZHandler : DelegatingHandler
+    public class AuthZHandler : DelegatingHandler
     {
         static readonly string directoryToken = Environment.GetEnvironmentVariable("asertoDirectoryToken");
         static readonly string authorizerToken = Environment.GetEnvironmentVariable("asertoAuthorizerToken");
@@ -20,12 +20,12 @@ namespace GraphTutorial.AuthZ
 
         public AuthZHandlerOption AuthZOption { get; set; }
 
-        public AzuthZHandler(AuthZHandlerOption? authZOption = null)
+        public AuthZHandler(AuthZHandlerOption? authZOption = null)
         {
             AuthZOption = authZOption ?? new AuthZHandlerOption();
         }
 
-        public AzuthZHandler(HttpMessageHandler innerHandler, AuthZHandlerOption? authZOption = null)
+        public AuthZHandler(HttpMessageHandler innerHandler, AuthZHandlerOption? authZOption = null)
             : this(authZOption)
         {
             this.InnerHandler = innerHandler;
@@ -47,7 +47,7 @@ namespace GraphTutorial.AuthZ
                 : await base.SendAsync(request, cancellationToken);
         }
 
-        static async Task<bool> IsAuthorizedAsync(string policyName, HttpRequestMessageModel httpRequestMessageModel)
+        public static async Task<bool> IsAuthorizedAsync(string policyName, HttpRequestMessageModel httpRequestMessageModel)
         {
             if (string.IsNullOrWhiteSpace(policyName))
                 return false;
