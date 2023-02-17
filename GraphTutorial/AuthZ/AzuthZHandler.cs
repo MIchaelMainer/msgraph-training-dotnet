@@ -62,7 +62,7 @@ namespace GraphTutorial.AuthZ
                 PolicyContext = new PolicyContext()
                 {
                     Decisions = new List<string>() { "allow" },
-                    Id = "3b0dfa15-ae40-11ed-b77c-01777bcce0c6",
+                    Id = await GetLatestPolicyIdAsync().ConfigureAwait(false), // TODO: Cache this value
                     Path = policyName
                 }
             };
@@ -82,6 +82,25 @@ namespace GraphTutorial.AuthZ
             var result = JsonSerializer.Deserialize<DecisionResult>(await response.Content.ReadAsStreamAsync());
             // Opportunity to improve by getting the decisions in a single response.
             return result.Decisions[0].Is;
+        }
+
+        static async Task<string> GetLatestPolicyIdAsync()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://authorizer.prod.aserto.com/api/v1/policy/policies");
+            request.Headers.Add("Accept", "application/json");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", directoryToken);
+            request.Headers.Add("aserto-tenant-id", asertoTenant);
+
+            var response = await client.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+                throw new AsertoException(new Error
+                {
+                    Code = response.StatusCode.ToString(),
+                    Message = await response.Content.ReadAsStringAsync()
+                });
+
+            var result = JsonSerializer.Deserialize<PoliciesResult>(await response.Content.ReadAsStreamAsync());
+            return result.Results.Last().Id;
         }
     }
 }

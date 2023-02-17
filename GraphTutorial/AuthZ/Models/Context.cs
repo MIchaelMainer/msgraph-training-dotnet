@@ -76,4 +76,19 @@ namespace GraphTutorial.AuthZ.Models
         IDENTITY_TYPE_SUB,
         IDENTITY_TYPE_JWT
     }
+
+    internal class PoliciesResult
+    {
+        [JsonPropertyName("results")]
+        public List<Policy> Results { get; set; }
+    }
+
+    internal class Policy
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+    }
 }
