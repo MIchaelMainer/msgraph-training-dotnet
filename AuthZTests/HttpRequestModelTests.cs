@@ -1,15 +1,12 @@
-﻿using System.Net.Http;
-using System.Text.Json;
-using GraphTutorial.Http.Models;
-using Newtonsoft.Json;
+﻿using GraphTutorial.Http.Models;
 
 namespace AuthZTests;
 
 public class HttpRequestModelTests
 {
-    static HttpRequestMessage httpRequestMessage = new();
+    static readonly HttpRequestMessage httpRequestMessage = new();
     static HttpRequestMessageModel httpRequestMessageModel;
-    static string testUrl = "https://graph.microsoft.com/v1.0/users";
+    static readonly string testUrl = "https://graph.microsoft.com/v1.0/users?$select=id,displayName";
 
     [SetUp]
     public void Setup()
@@ -42,7 +39,9 @@ public class HttpRequestModelTests
     public void Test1()
     {
         Assert.IsTrue(httpRequestMessageModel.Method == HttpMethod.Get.ToString());
-        Assert.IsTrue(httpRequestMessageModel.Url == testUrl);
+        Assert.IsTrue(httpRequestMessageModel.Path == httpRequestMessage.RequestUri?.LocalPath);
         Assert.IsTrue(httpRequestMessageModel.Headers.TryGetValue("Authorization", out var authz));
+        Assert.IsTrue(httpRequestMessageModel.QueryParameters?.TryGetValue("$select", out var select));
+        Assert.IsNotEmpty(httpRequestMessageModel.Body);
     }
 }

@@ -3,9 +3,8 @@
 
 using GraphTutorial.AuthZ.Models;
 using GraphTutorial.Exceptions;
-using Microsoft.Graph;
-using GraphTutorial.AuthZ.Utils;
 using GraphTutorial.Http.Models;
+using Microsoft.Graph;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -41,7 +40,7 @@ namespace GraphTutorial.AuthZ
             //var msJwtClaims = new MsJwtClaims(JwtPayload?.Claims);
 
             // Convert HttpRequestMessage into a model used for evaluation.
-            var httpRequestMessageResource = new GraphTutorial.Http.Models.HttpRequestMessageModel(request);
+            var httpRequestMessageResource = new HttpRequestMessageModel(request);
 
             return !(await IsAuthorizedAsync(AuthZOption.Policy.ToString(), httpRequestMessageResource))
                 ? throw new Exception("Access denied!")
@@ -74,7 +73,7 @@ namespace GraphTutorial.AuthZ
                 {
                     { "httpRequest", httpRequestMessageModel }
                 }
-                
+
             };
 
             var payload = JsonSerializer.Serialize(contextPayload);

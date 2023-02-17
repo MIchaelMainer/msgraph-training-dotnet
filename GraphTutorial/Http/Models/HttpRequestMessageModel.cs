@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
-using System.Net.Http;
-using static Microsoft.Graph.CoreConstants;
+using System.Web;
 
 namespace GraphTutorial.Http.Models
 {
@@ -9,34 +8,42 @@ namespace GraphTutorial.Http.Models
         public HttpRequestMessageModel(HttpRequestMessage httpRequestMessage)
         {
             Method = httpRequestMessage.Method.ToString();
-            Url = httpRequestMessage.RequestUri.ToString();
-            
-            var headers = new Dictionary<String, String>(httpRequestMessage.Headers.Count());
+            Path = httpRequestMessage.RequestUri?.LocalPath;
 
-            foreach (var header in httpRequestMessage.Headers)
-            {   
-                // Note that there can be more than one value per key.
-                headers.Add(header.Key, header.Value.First());
+            if (!string.IsNullOrWhiteSpace(httpRequestMessage.RequestUri?.Query))
+            {
+                var queryParams = httpRequestMessage.RequestUri.Query.TrimStart('?').Split("&");
+                QueryParameters = new Dictionary<String, String>(queryParams.Length);
+                foreach (var queryParam in queryParams)
+                {
+                    var queryParamSegments = queryParam.Split("=");
+                    QueryParameters.Add(queryParamSegments[0], HttpUtility.UrlDecode(queryParamSegments[1]));
+                }
             }
 
-            Headers = headers;
+            Headers = new Dictionary<String, String>(httpRequestMessage.Headers.Count());
+            foreach (var header in httpRequestMessage.Headers)
+            {
+                // Note that there can be more than one value per key.
+                Headers.Add(header.Key, header.Value.First());
+            }
 
             Body = httpRequestMessage?.Content is StringContent ? httpRequestMessage.Content.ReadAsStringAsync().Result : string.Empty;
-
-
-
         }
-        
+
         [JsonPropertyName("method")]
         public string Method { get; set; }
 
-        [JsonPropertyName("url")]
-        public string Url { get; set; }
+        [JsonPropertyName("path")]
+        public string? Path { get; set; }
 
         [JsonPropertyName("headers")]
         public IDictionary<string, string> Headers { get; set; }
 
+        [JsonPropertyName("queryParameters")]
+        public IDictionary<string, string>? QueryParameters { get; set; }
+
         [JsonPropertyName("body")]
-        public string Body { get; set; }
+        public string? Body { get; set; }
     }
 }
