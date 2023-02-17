@@ -109,7 +109,7 @@ async Task GreetUserAsync(AuthZPolicy policy)
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error getting user: {ex.InnerException?.Message ?? ex.Message}");
+        WriteError("Error getting user", ex);
     }
 }
 // </GreetUserSnippet>
@@ -141,7 +141,7 @@ async Task ListInboxAsync(AuthZPolicy policy)
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error getting user's inbox: {ex.InnerException?.Message ?? ex.Message}");
+        WriteError("Error getting user's inbox", ex);
     }
 }
 // </ListInboxSnippet>
@@ -170,7 +170,7 @@ async Task SendMailAsync(AuthZPolicy policy)
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error sending mail: {ex.InnerException?.Message ?? ex.Message}");
+        WriteError("Error sending mail", ex);
     }
 }
 // </SendMailSnippet>
@@ -200,7 +200,13 @@ async Task ListUsersAsync(AuthZPolicy policy)
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error getting users: {ex.InnerException?.Message ?? ex.Message}");
+        WriteError("Error getting users", ex);
     }
 }
 // </ListUsersSnippet>
+void WriteError(string message, Exception ex)
+{
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.WriteLine($"{message}: {ex.InnerException?.Message ?? ex.Message}");
+    Console.ResetColor();
+}

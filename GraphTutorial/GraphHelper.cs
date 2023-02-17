@@ -93,8 +93,8 @@ class GraphHelper
                 m.ReceivedDateTime,
                 m.Subject
             })
-            // Get at most 25 results
-            .Top(25)
+            // Get at most 2 results
+            .Top(2)
             // Sort by received time, newest first
             .OrderBy("ReceivedDateTime DESC")
             .GetAsync();
@@ -151,8 +151,8 @@ class GraphHelper
                 u.Id,
                 u.Mail
             })
-            // Get at most 25 results
-            .Top(25)
+            // Get at most 2 results
+            .Top(2)
             // Sort by display name
             .OrderBy("DisplayName")
             .GetAsync();
