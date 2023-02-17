@@ -3,6 +3,9 @@
 
 using Azure.Core;
 using Azure.Identity;
+using GraphTutorial;
+using GraphTutorial.AuthZ;
+using GraphTutorial.AuthZ.Models;
 using Microsoft.Graph;
 
 class GraphHelper
@@ -20,11 +23,15 @@ class GraphHelper
         Func<DeviceCodeInfo, CancellationToken, Task> deviceCodePrompt)
     {
         _settings = settings;
+        _deviceCodeCredential = new DeviceCodeCredential(deviceCodePrompt, settings.AuthTenant, settings.ClientId);
 
-        _deviceCodeCredential = new DeviceCodeCredential(deviceCodePrompt,
-            settings.AuthTenant, settings.ClientId);
+        var authProvider = new TokenCredentialAuthProvider(_deviceCodeCredential, settings.GraphUserScopes);
 
-        _userClient = new GraphServiceClient(_deviceCodeCredential, settings.GraphUserScopes);
+        var handlers = GraphClientFactory.CreateDefaultHandlers(authProvider);
+        handlers.Insert(1, new AzuthZHandler());
+
+        var httpClient = GraphClientFactory.Create(handlers);
+        _userClient = new GraphServiceClient(httpClient);
     }
     // </UserAuthConfigSnippet>
 
@@ -46,14 +53,14 @@ class GraphHelper
     // </GetUserTokenSnippet>
 
     // <GetUserSnippet>
-    public static Task<User> GetUserAsync()
+    public static Task<User> GetUserAsync(AuthZPolicy policy)
     {
         // Ensure client isn't null
         _ = _userClient ??
             throw new System.NullReferenceException("Graph has not been initialized for user auth");
-
         return _userClient.Me
             .Request()
+            .WithAuthZPolicy(policy)
             .Select(u => new
             {
                 // Only request specific properties
@@ -66,7 +73,7 @@ class GraphHelper
     // </GetUserSnippet>
 
     // <GetInboxSnippet>
-    public static Task<IMailFolderMessagesCollectionPage> GetInboxAsync()
+    public static Task<IMailFolderMessagesCollectionPage> GetInboxAsync(AuthZPolicy policy)
     {
         // Ensure client isn't null
         _ = _userClient ??
@@ -77,6 +84,7 @@ class GraphHelper
             .MailFolders["Inbox"]
             .Messages
             .Request()
+            .WithAuthZPolicy(policy)
             .Select(m => new
             {
                 // Only request specific properties
@@ -94,7 +102,7 @@ class GraphHelper
     // </GetInboxSnippet>
 
     // <SendMailSnippet>
-    public static async Task SendMailAsync(string subject, string body, string recipient)
+    public static async Task SendMailAsync(string subject, string body, string recipient, AuthZPolicy policy)
     {
         // Ensure client isn't null
         _ = _userClient ??
@@ -125,50 +133,17 @@ class GraphHelper
         await _userClient.Me
             .SendMail(message)
             .Request()
+            .WithAuthZPolicy(policy)
             .PostAsync();
     }
     // </SendMailSnippet>
-    #endregion
-
-    #region App-only
-    // <AppOnyAuthConfigSnippet>
-    // App-ony auth token credential
-    private static ClientSecretCredential? _clientSecretCredential;
-    // Client configured with app-only authentication
-    private static GraphServiceClient? _appClient;
-
-    private static void EnsureGraphForAppOnlyAuth()
-    {
-        // Ensure settings isn't null
-        _ = _settings ??
-            throw new System.NullReferenceException("Settings cannot be null");
-
-        if (_clientSecretCredential == null)
-        {
-            _clientSecretCredential = new ClientSecretCredential(
-                _settings.TenantId, _settings.ClientId, _settings.ClientSecret);
-        }
-
-        if (_appClient == null)
-        {
-            _appClient = new GraphServiceClient(_clientSecretCredential,
-                // Use the default scope, which will request the scopes
-                // configured on the app registration
-                new[] {"https://graph.microsoft.com/.default"});
-        }
-    }
-    // </AppOnyAuthConfigSnippet>
 
     // <GetUsersSnippet>
-    public static Task<IGraphServiceUsersCollectionPage> GetUsersAsync()
+    public static Task<IGraphServiceUsersCollectionPage> GetUsersAsync(AuthZPolicy policy)
     {
-        EnsureGraphForAppOnlyAuth();
-        // Ensure client isn't null
-        _ = _appClient ??
-            throw new System.NullReferenceException("Graph has not been initialized for app-only auth");
-
-        return _appClient.Users
+        return _userClient.Users
             .Request()
+            .WithAuthZPolicy(policy)
             .Select(u => new
             {
                 // Only request specific properties
@@ -184,17 +159,4 @@ class GraphHelper
     }
     // </GetUsersSnippet>
     #endregion
-
-    #pragma warning disable CS1998
-    // <MakeGraphCallSnippet>
-    // This function serves as a playground for testing Graph snippets
-    // or other code
-    public async static Task MakeGraphCallAsync()
-    {
-        // INSERT YOUR CODE HERE
-        // Note: if using _appClient, be sure to call EnsureGraphForAppOnlyAuth
-        // before using it.
-        // EnsureGraphForAppOnlyAuth();
-    }
-    // </MakeGraphCallSnippet>
 }
