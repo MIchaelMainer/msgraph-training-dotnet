@@ -53,23 +53,35 @@ class GraphHelper
     // </GetUserTokenSnippet>
 
     // <GetUserSnippet>
-    public static Task<User> GetUserAsync(AuthZPolicy policy)
+    public static Task<User> GetUserAsync(AuthZPolicy policy, bool withSelect = true)
     {
         // Ensure client isn't null
         _ = _userClient ??
             throw new System.NullReferenceException("Graph has not been initialized for user auth");
-        return _userClient.Me
+
+        var userRequest = _userClient.Me
             .Request()
-            .WithAuthZPolicy(policy)
-            .Select(u => new
-            {
-                // Only request specific properties
-                u.DisplayName,
-                u.Mail,
-                u.UserPrincipalName
-            })
-            .GetAsync();
+            .WithAuthZPolicy(policy);
+
+        if (withSelect)
+        {
+            return userRequest
+                .Select(u => new
+                {
+                    // Only request specific properties
+                    u.DisplayName,
+                    u.Mail,
+                    u.UserPrincipalName
+                })
+                .GetAsync();
+        }
+        else
+        {
+            return userRequest
+                .GetAsync();
+        }
     }
+
     // </GetUserSnippet>
 
     // <GetInboxSnippet>

@@ -41,9 +41,9 @@ namespace GraphTutorial.AuthZ
 
             // Convert HttpRequestMessage into a model used for evaluation.
             var httpRequestMessageResource = new HttpRequestMessageModel(request);
-
-            return !(await IsAuthorizedAsync(AuthZOption.Policy.ToString(), httpRequestMessageResource))
-                ? throw new Exception("Access denied!")
+            var policyName = AuthZOption.Policy.ToString();
+            return !(await IsAuthorizedAsync(policyName, httpRequestMessageResource))
+                ? throw new AuthorizationException("Access denied", policyName, httpRequestMessageResource)
                 : await base.SendAsync(request, cancellationToken);
         }
 

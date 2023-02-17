@@ -3,6 +3,7 @@
 
 // <ProgramSnippet>
 using GraphTutorial.AuthZ.Models;
+using GraphTutorial.Exceptions;
 
 Console.WriteLine(".NET Graph Tutorial\n");
 
@@ -67,7 +68,6 @@ while (choice != 0)
             break;
     }
 }
-
 // </ProgramSnippet>
 
 // <InitializeGraphSnippet>
@@ -86,17 +86,25 @@ void InitializeGraph(Settings settings)
 }
 // </InitializeGraphSnippet>
 
-// <GreetUserSnippet>
 async Task CallAllRequests(AuthZPolicy policy)
 {
-    // List emails from user's inbox
-    await ListInboxAsync(policy);
-    // Send an email message
-    await SendMailAsync(policy);
+    // Get signed-in user with no select
+    await GetSignedInUserWithoutSelectAsync(policy);
+
+    // Get signed-in user with select
+    await GetSignedInUserWithSelectAsync(policy);
+
     // List users
     await ListUsersAsync(policy);
+
+    // List emails from user's inbox
+    await ListInboxAsync(policy);
+
+    // Send an email message
+    await SendMailAsync(policy);
 }
 
+// <GreetUserSnippet>
 async Task GreetUserAsync(AuthZPolicy policy)
 {
     try
@@ -114,30 +122,65 @@ async Task GreetUserAsync(AuthZPolicy policy)
 }
 // </GreetUserSnippet>
 
+// <GetSignedInUserWithSelectSnippet>
+async Task GetSignedInUserWithSelectAsync(AuthZPolicy policy)
+{
+    try
+    {
+        Console.WriteLine($"+ Fetching user with select...");
+        var signedInUser = await GraphHelper.GetUserAsync(policy);
+
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"  Hello, {signedInUser?.DisplayName}!");
+        Console.ResetColor();
+        Console.WriteLine("\n");
+    }
+    catch (Exception ex)
+    {
+        WriteError("Error getting signed-in user with select", ex);
+    }
+}
+// </GetSignedInUserWithSelectSnippet>
+
+// <GetSignedInUserWithoutSelectSnippet>
+async Task GetSignedInUserWithoutSelectAsync(AuthZPolicy policy)
+{
+    try
+    {
+        Console.WriteLine($"+ Fetching user without select...");
+        var signedInUser = await GraphHelper.GetUserAsync(policy, withSelect: false);
+
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"  Hello, {signedInUser?.DisplayName}!");
+        Console.ResetColor();
+        Console.WriteLine("\n");
+    }
+    catch (Exception ex)
+    {
+        WriteError("Error getting signed-in user without select", ex);
+    }
+}
+// </GetSignedInUserWithoutSelectSnippet>
 
 // <ListInboxSnippet>
 async Task ListInboxAsync(AuthZPolicy policy)
 {
     try
     {
+        Console.WriteLine($"+ Fetching user's inbox...");
         var messagePage = await GraphHelper.GetInboxAsync(policy);
 
         // Output each message's details
         foreach (var message in messagePage.CurrentPage)
         {
-            Console.WriteLine($"Message: {message.Subject ?? "NO SUBJECT"}");
-            Console.WriteLine($"  From: {message.From?.EmailAddress?.Name}");
-            Console.WriteLine($"  Status: {(message.IsRead!.Value ? "Read" : "Unread")}");
-            Console.WriteLine($"  Received: {message.ReceivedDateTime?.ToLocalTime().ToString()}");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"  Message: {message.Subject ?? "NO SUBJECT"}");
+            Console.WriteLine($"    From: {message.From?.EmailAddress?.Name}");
+            Console.WriteLine($"    Status: {(message.IsRead!.Value ? "Read" : "Unread")}");
+            Console.WriteLine($"    Received: {message.ReceivedDateTime?.ToLocalTime().ToString()}");
+            Console.ResetColor();
         }
-
-        // If NextPageRequest is not null, there are more messages
-        // available on the server
-        // Access the next page like:
-        // messagePage.NextPageRequest.GetAsync();
-        var moreAvailable = messagePage.NextPageRequest != null;
-
-        Console.WriteLine($"\nMore messages available? {moreAvailable}");
+        Console.WriteLine("\n");
     }
     catch (Exception ex)
     {
@@ -152,8 +195,8 @@ async Task SendMailAsync(AuthZPolicy policy)
     try
     {
         // Send mail to the signed-in user
-        // Get the user for their email address
-        var user = await GraphHelper.GetUserAsync(policy);
+        Console.WriteLine($"+ Sending mail...");
+        var user = await GraphHelper.GetUserAsync(AuthZPolicy.Base); // TODO: Review this. We are using base policy to read signed-in user. We should allow /me for write only policies to fetch the signed-in user.
 
         var userEmail = user?.Mail ?? user?.UserPrincipalName;
 
@@ -162,11 +205,12 @@ async Task SendMailAsync(AuthZPolicy policy)
             Console.WriteLine("Couldn't get your email address, canceling...");
             return;
         }
+        await GraphHelper.SendMailAsync("Testing Microsoft Graph", "Hello world!", userEmail, policy);
 
-        await GraphHelper.SendMailAsync("Testing Microsoft Graph",
-            "Hello world!", userEmail, policy);
-
-        Console.WriteLine("Mail sent.");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("  Mail sent.");
+        Console.ResetColor();
+        Console.WriteLine("\n");
     }
     catch (Exception ex)
     {
@@ -180,23 +224,18 @@ async Task ListUsersAsync(AuthZPolicy policy)
 {
     try
     {
+        Console.WriteLine($"+ Fetching users...");
         var userPage = await GraphHelper.GetUsersAsync(policy);
-
         // Output each users's details
         foreach (var user in userPage.CurrentPage)
         {
-            Console.WriteLine($"User: {user.DisplayName ?? "NO NAME"}");
-            Console.WriteLine($"  ID: {user.Id}");
-            Console.WriteLine($"  Email: {user.Mail ?? "NO EMAIL"}");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"  User: {user.DisplayName ?? "NO NAME"}");
+            Console.WriteLine($"    ID: {user.Id}");
+            Console.WriteLine($"    Email: {user.Mail ?? "NO EMAIL"}");
+            Console.ResetColor();
         }
-
-        // If NextPageRequest is not null, there are more users
-        // available on the server
-        // Access the next page like:
-        // userPage.NextPageRequest.GetAsync();
-        var moreAvailable = userPage.NextPageRequest != null;
-
-        Console.WriteLine($"\nMore users available? {moreAvailable}");
+        Console.WriteLine("\n");
     }
     catch (Exception ex)
     {
@@ -204,9 +243,35 @@ async Task ListUsersAsync(AuthZPolicy policy)
     }
 }
 // </ListUsersSnippet>
+
+void WriteAuthorizationError(string message, AuthorizationException authZEx)
+{
+    string? queryParameters = default;
+    if (authZEx.RequestMessageModel.QueryParameters != null)
+    {
+        queryParameters = $"?{string.Join(Environment.NewLine, authZEx.RequestMessageModel.QueryParameters)}";
+    }
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.WriteLine($"******************* {authZEx.Message} *******************");
+    Console.WriteLine($"{message}");
+    Console.WriteLine($"Request blocked by policy: {authZEx.PolicyName}");
+    Console.WriteLine($"Request: {authZEx.RequestMessageModel.Method} {authZEx.RequestMessageModel.Path}{queryParameters}");
+    Console.WriteLine($"*****************************************************\n");
+    Console.ResetColor();
+}
+
 void WriteError(string message, Exception ex)
 {
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine($"{message}: {ex.InnerException?.Message ?? ex.Message}");
-    Console.ResetColor();
+    switch (ex.InnerException)
+    {
+        case AuthorizationException:
+            WriteAuthorizationError(message, (AuthorizationException)ex.InnerException);
+            break;
+        default:
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"{message}: {ex.InnerException?.Message ?? ex.Message}");
+            Console.ResetColor();
+            break;
+    }
+
 }
