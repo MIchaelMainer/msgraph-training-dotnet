@@ -1,6 +1,4 @@
-﻿using GraphTutorial.Http.Models;
-
-namespace AuthZTests;
+﻿namespace AuthZTests;
 
 public class HttpRequestModelTests
 {
