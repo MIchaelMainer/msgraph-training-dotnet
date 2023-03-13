@@ -21,7 +21,7 @@ while (choice != 0)
 {
     Console.WriteLine("Please choose one of the following options:");
     Console.WriteLine("0. Exit");
-    Console.WriteLine("1. Allow all requests");
+    Console.WriteLine("1. Use base tenant policy");
     Console.WriteLine("2. Allow users path only");
     Console.WriteLine("3. Disallow all but one write path");
     Console.WriteLine("4. Disallow all but two write path");
