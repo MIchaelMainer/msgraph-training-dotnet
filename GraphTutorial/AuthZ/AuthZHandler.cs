@@ -109,7 +109,7 @@ namespace GraphTutorial.AuthZ
                 });
 
             var result = JsonSerializer.Deserialize<PoliciesResult>(await response.Content.ReadAsStreamAsync());
-            return result.Results.Last().Id;
+            return result.Results.Single(r => r.Name == "msgraph-simple-policy").Id;
         }
     }
 }
